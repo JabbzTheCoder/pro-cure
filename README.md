@@ -162,10 +162,10 @@ Built in alignment with the [Data Science for Social Impact (DSFSI)](https://dsf
 
 ```bibtex
 @software{procure_2026,
-  author  = {[Your Name]},
+  author  = {Kamogelo Jabulile Motlhale},
   title   = {Pro-Cure: AI-Powered Procurement Anomaly Detection for South African Public Health},
   year    = {2026},
-  url     = {https://github.com/[your-username]/pro-cure}
+  url     = {https://github.com/jabbzthecoder/pro-cure}
 }
 ```
 
