@@ -1,0 +1,33 @@
+# Pro-Cure .gitignore
+
+# Raw data — never commit (file size + reproducibility from public source)
+data/raw/
+data/raw/*
+
+# Model checkpoints — too large for GitHub
+models/checkpoints/
+*.pt
+*.bin
+*.safetensors
+
+# Environment
+.env
+*.env
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Results with PII — processed outputs stay local until reviewed
+results/raw_flagged_*.csv
+
+# wandb
+wandb/

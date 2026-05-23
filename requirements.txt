@@ -1,0 +1,41 @@
+# Pro-Cure — Python dependencies
+# Install: pip install -r requirements.txt
+# Python 3.10+ recommended
+
+# ── Core data stack ───────────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# ── Data Mining — COS 783 ─────────────────────────────────────
+scikit-learn>=1.3.0          # TF-IDF, Isolation Forest, DBSCAN, KMeans, RF, SVM
+mlxtend>=0.23.0              # Apriori + FP-Growth association rules
+imbalanced-learn>=0.11.0     # SMOTE class balancing
+networkx>=3.1                # Supplier relationship graph
+python-louvain>=0.16         # Louvain community detection
+rapidfuzz>=3.0.0             # Fuzzy supplier name deduplication
+
+# ── NLP — COS 760 ────────────────────────────────────────────
+transformers>=4.35.0         # DistilBERT / AfroXLMR fine-tuning
+datasets>=2.14.0             # HuggingFace dataset utilities
+torch>=2.0.0                 # Model training
+sentencepiece>=0.1.99        # Tokenizer dependency
+spacy>=3.6.0                 # NER + rule-based key phrase extraction
+# Run after install: python -m spacy download en_core_web_sm
+
+# ── Visualisation ─────────────────────────────────────────────
+matplotlib>=3.7.0
+seaborn>=0.13.0
+plotly>=5.17.0               # Interactive network graph + dashboard charts
+pyvis>=0.3.2                 # Supplier network HTML export
+
+# ── App ───────────────────────────────────────────────────────
+streamlit>=1.28.0
+
+# ── Data access & parsing ─────────────────────────────────────
+requests>=2.31.0             # OCDS data download
+openpyxl>=3.1.0              # Read OCDS Excel format
+jsonlines>=3.1.0             # Parse OCDS JSONL format
+
+# ── Experiment tracking (optional) ───────────────────────────
+wandb>=0.16.0                # Training run logging — recommended for Phase 4
