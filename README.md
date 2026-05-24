@@ -11,7 +11,7 @@
 
 On 23 August 2021, Babita Deokaran was shot nine times outside her Johannesburg home. She was the key witness in a corruption investigation into the Gauteng Department of Health — having manually traced how R2 billion in public health funds was systematically looted through fraudulent procurement.
 
-The corruption was not hidden. It was hidden in plain sight — in thousands of contracts just below regulatory thresholds, awarded repeatedly to the same connected suppliers, justified with vague single-source deviations, and never flagged because no system existed to look for the patterns.
+The corruption was hidden in plain sight — in thousands of contracts just below regulatory thresholds, awarded repeatedly to the same connected suppliers, justified with vague single-source deviations, and never flagged because no system existed to look for the patterns.
 
 **Pro-Cure is that system.**
 
