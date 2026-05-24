@@ -3,7 +3,7 @@
 
 *In memory of Babita Deokaran — Chief Financial Officer, Tembisa Hospital.*
 *Assassinated 23 August 2021 after exposing R2 billion in procurement corruption.*
-*She found it by hand. Pro-Cure finds it automatically.*
+*She found it maanually. Pro-Cure finds it automatically.*
 
 ---
 
