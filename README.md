@@ -61,17 +61,6 @@ All signals are combined into a single **Pro-Cure Risk Index (0–100)** per con
 | National Treasury OCDS | Feb 2017 – present · 33,689 tenders · 9,090 awards | PDDL (fully open) | [data.open-contracting.org](https://data.open-contracting.org/en/publication/143) |
 | Vulekamali | Deviation (single-source) awards | Open | [vulekamali.gov.za](https://vulekamali.gov.za/datasets) |
 
----
-
-## Modules applied
-
-Developed as part of BSc Hons Computer Science at the University of Pretoria:
-
-- **COS 783 — Data Mining:** contract splitting (DBSCAN), price anomaly (Isolation Forest), supplier concentration (HHI), association rule mining (Apriori/FP-Growth), network analysis (NetworkX, Louvain)
-- **COS 760 — NLP:** tender document classification (TF-IDF + transformer), key phrase extraction (spaCy NER), specification similarity (cosine similarity), formality scoring
-
----
-
 ## Repository structure
 
 ```
