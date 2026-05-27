@@ -1,1 +1,10 @@
 .venv/
+
+# Raw data — never commit (reproducible from public source)
+data/raw/
+.DS_Store
+**/.DS_Store
+
+# Processed outputs — too large for GitHub
+data/processed/
+data/health_sector/
