@@ -1,9 +1,9 @@
 # Pro-Cure
-### AI-powered procurement anomaly detection for South African public health
+### AI-powered procurement anomaly detection for South African public institutions
 
 *In memory of Babita Deokaran — Chief Financial Officer, Tembisa Hospital.*
 *Assassinated 23 August 2021 after exposing R2 billion in procurement corruption.*
-*She found it maanually. Pro-Cure finds it automatically.*
+*She found it by hand. Pro-Cure finds it automatically.*
 
 ---
 
@@ -11,15 +11,29 @@
 
 On 23 August 2021, Babita Deokaran was shot nine times outside her Johannesburg home. She was the key witness in a corruption investigation into the Gauteng Department of Health — having manually traced how R2 billion in public health funds was systematically looted through fraudulent procurement.
 
-The corruption was hidden in plain sight — in thousands of contracts just below regulatory thresholds, awarded repeatedly to the same connected suppliers, justified with vague single-source deviations, and never flagged because no system existed to look for the patterns.
+The corruption was not hidden. It was hidden in plain sight — in thousands of contracts just below regulatory thresholds, awarded repeatedly to the same connected suppliers, justified with vague single-source deviations, and never flagged because no system existed to look for the patterns.
 
 **Pro-Cure is that system.**
 
 ---
 
+## Scope — generic first, then sector-specific
+
+Pro-Cure is built on the **full National Treasury OCDS dataset** — all 33,689 tenders across every government department (2017–2026). This is a deliberate design decision: training on the complete dataset produces more robust models and enables cross-sector comparison.
+
+A health sector lens is applied as a downstream filter — the same models that detect corruption in SAPS procurement, DPWI contracts, or municipal awards will detect it in Tembisa Hospital too. One system, every department.
+
+| Scope | Records | Notes |
+|---|---|---|
+| Generic (all departments) | 33,689 tenders · 9,090 awards | Full OCDS dataset — model training |
+| Health sector subset | 1,376 tenders · 858 with award values | Downstream filter for Tembisa validation |
+| Future: SAPS, DPWI, municipalities | Same pipeline, different filter | No retraining required |
+
+---
+
 ## What exists — and what's missing
 
-The [Open Contracting Partnership](https://www.open-contracting.org/) released **Cardinal** in 2024 — an open-source library calculating 10 generic procurement red flag indicators on any OCDS dataset, tested in Ecuador and the Dominican Republic. It is the closest existing tool to Pro-Cure.
+The [Open Contracting Partnership](https://www.open-contracting.org/) released **Cardinal** in 2024 — an open-source library calculating 10 generic procurement red flag indicators on any OCDS dataset. It is the closest existing tool to Pro-Cure.
 
 Pro-Cure runs Cardinal first as a baseline, then shows what SA-specific signals catch that Cardinal misses:
 
@@ -27,9 +41,9 @@ Pro-Cure runs Cardinal first as a baseline, then shows what SA-specific signals 
 |---|---|---|
 | Generic OCDS red flags | ✅ 10 indicators | ✅ Included as baseline |
 | SA procurement threshold awareness (R200k / R500k) | ❌ | ✅ |
-| Tembisa-specific contract splitting patterns | ❌ | ✅ DBSCAN temporal clustering |
-| Commodity-level price anomaly (health sector) | ❌ | ✅ Isolation Forest per category |
-| Supplier relationship network (family clusters) | ❌ | ✅ NetworkX + Louvain |
+| Contract splitting detection across all departments | ❌ | ✅ DBSCAN temporal clustering |
+| Commodity-level price anomaly | ❌ | ✅ Isolation Forest per category |
+| Supplier relationship network (cross-department) | ❌ | ✅ NetworkX + Louvain |
 | NLP on tender justification documents | ❌ | ✅ TF-IDF + transformer classifier |
 | Retrospective validation against SIU ground truth | ❌ | ✅ Tembisa reconstruction |
 
@@ -39,16 +53,15 @@ The gap between Cardinal's recall and Pro-Cure's recall on known Tembisa actors 
 
 ## What Pro-Cure does
 
-Pro-Cure applies data mining and NLP to South Africa's public procurement data to automatically detect the exact corruption patterns documented in the Tembisa SIU investigation:
+Pro-Cure applies data mining and NLP to all South African government procurement data to automatically detect documented corruption patterns:
 
-| Corruption pattern | Detection method |
-|---|---|
-| Contract splitting — awards kept just below R500k threshold | DBSCAN temporal clustering + threshold proximity scoring |
-| Inflated prices vs market rates | Isolation Forest per commodity category |
-| Awards concentrated in connected supplier families | Herfindahl-Hirschman Index + Association Rule Mining |
-| Supplier relationship networks (227 companies, 4 families) | NetworkX graph analysis + Louvain community detection |
-| Vague single-source justifications without substance | NLP classifier (TF-IDF + transformer fine-tuning) |
-| Near-identical tender specs written for a specific supplier | TF-IDF cosine similarity across tender documents |
+| Corruption pattern | Detection method | Training scope |
+|---|---|---|
+| Single-source justifications without substance | NLP classifier (TF-IDF + LR/SVM/RF) | All 33,689 tenders |
+| Contract splitting — awards just below R500k threshold | DBSCAN temporal clustering | All departments |
+| Inflated prices vs market rates | Isolation Forest per commodity | All departments |
+| Awards concentrated in connected supplier families | Herfindahl-Hirschman Index + Apriori | All departments |
+| Supplier relationship networks | NetworkX + Louvain community detection | All departments |
 
 All signals are combined into a single **Pro-Cure Risk Index (0–100)** per contract and per supplier.
 
@@ -56,10 +69,45 @@ All signals are combined into a single **Pro-Cure Risk Index (0–100)** per con
 
 ## Data sources
 
-| Source | Coverage | Licence | URL |
-|---|---|---|---|
-| National Treasury OCDS | Feb 2017 – present · 33,689 tenders · 9,090 awards | PDDL (fully open) | [data.open-contracting.org](https://data.open-contracting.org/en/publication/143) |
-| Vulekamali | Deviation (single-source) awards | Open | [vulekamali.gov.za](https://vulekamali.gov.za/datasets) |
+The full OCDS download is a normalised relational star schema — 8 CSV files joined on `ocid`:
+
+| File | Rows | Contents |
+|---|---|---|
+| `main.csv` | 33,689 | All tenders — buyer, description, method, date |
+| `awards.csv` | 9,090 | Completed awards + contract values |
+| `awards_suppliers.csv` | 9,090 | Supplier names per award |
+| `contracts.csv` | 1,223 | Signed contracts |
+| `parties.csv` | 9,090 | Company contact details |
+| `tender_tenderers.csv` | 3,388 | Bidder records |
+
+> ⚠️ **Schema note:** `tender_value_amount` in `main.csv` is uniformly zero. Real contract values are in `awards.csv → value_amount`. Pro-Cure uses the correct source; tools relying on `main.csv` values will miss all contract amounts.
+
+| Source | Licence | URL |
+|---|---|---|
+| National Treasury OCDS (full) | PDDL — fully open | [data.open-contracting.org](https://data.open-contracting.org/en/publication/143) |
+| Vulekamali deviations | Open | [vulekamali.gov.za](https://vulekamali.gov.za/datasets) |
+
+---
+
+## Ground truth strategy
+
+Two signals combined into one label set for model training:
+
+1. **Procurement method** — `direct` / `limited` / `selective` awards are legally required to have written justification in SA law. They are the documented mechanism for single-source corruption. **407 positive examples** across all departments.
+2. **SIU Tembisa syndicates** — known family networks from the SIU report cross-referenced against supplier names. **11 additional positive examples** (NTSAKO SERVICES, RIRHANDZU MAYIJI ATTORNEYS).
+
+Total ground truth: **418 suspicious** vs **37,405 clean** across 33,689 tenders.
+
+---
+
+## Modules applied
+
+Developed as part of BSc Hons Computer Science at the University of Pretoria:
+
+- **COS 783 — Data Mining:** TF-IDF feature engineering, contract splitting (DBSCAN + threshold proximity), price anomaly (Isolation Forest), supplier concentration (HHI), association rule mining (Apriori/FP-Growth), network analysis (NetworkX, Louvain), classical baselines (LR, SVM, RF)
+- **COS 760 — NLP:** tender document classification, text normalisation, key phrase extraction (spaCy NER), specification similarity (cosine similarity), formality scoring
+
+---
 
 ## Repository structure
 
@@ -67,22 +115,30 @@ All signals are combined into a single **Pro-Cure Risk Index (0–100)** per con
 pro-cure/
 │
 ├── data/
-│   ├── raw/                        # Raw OCDS downloads (gitignored)
-│   ├── processed/                  # Cleaned master dataset
-│   └── health_sector/              # Health-sector filtered subset
+│   ├── raw/full/                   # OCDS star schema CSVs (gitignored)
+│   │   ├── main.csv
+│   │   ├── awards.csv
+│   │   ├── awards_suppliers.csv
+│   │   ├── contracts.csv
+│   │   ├── parties.csv
+│   │   └── tender_tenderers.csv
+│   ├── processed/
+│   │   └── master_analytical.csv   # Joined analytical table
+│   └── health_sector/
+│       └── health_sector_master.csv
 │
 ├── notebooks/
-│   ├── 01_data_parsing.ipynb
-│   ├── 02_eda.ipynb
-│   ├── 03_cardinal_baseline.ipynb  # ← Cardinal run + gap analysis
-│   ├── 04_contract_splitting.ipynb
-│   ├── 05_price_anomaly.ipynb
-│   ├── 06_supplier_network.ipynb
-│   ├── 07_nlp_pipeline.ipynb
-│   └── 08_risk_index.ipynb         # Cardinal vs Pro-Cure results table
+│   ├── 01_data_loading.ipynb       # Schema, joins, health filter
+│   ├── 02_nlp_classifier.ipynb     # ← NLP single-source classifier (COS 760)
+│   ├── 03_cardinal_baseline.ipynb  # Cardinal run + gap analysis
+│   ├── 04_contract_splitting.ipynb # DBSCAN + threshold proximity (COS 783)
+│   ├── 05_price_anomaly.ipynb      # Isolation Forest (COS 783)
+│   ├── 06_supplier_network.ipynb   # NetworkX + Louvain (COS 783)
+│   └── 07_risk_index.ipynb         # Pro-Cure Risk Index + Cardinal comparison
 │
 ├── models/
-│   └── checkpoints/
+│   ├── nlp_classifier_lr.joblib    # Logistic Regression NLP model
+│   └── nlp_tfidf_vectorizer.joblib # TF-IDF vectorizer
 │
 ├── app/
 │   └── app.py                      # Streamlit dashboard
@@ -91,10 +147,13 @@ pro-cure/
 │   └── tembisa_reconstruction.md
 │
 ├── results/
-│   ├── cardinal_baseline.csv       # Cardinal scores on SA health data
-│   ├── procure_risk_scores.csv     # Pro-Cure Risk Index scores
-│   └── cardinal_vs_procure.csv     # Head-to-head comparison
+│   ├── nlp_scores.csv              # NLP risk scores — all 33,689 tenders
+│   ├── nlp_confusion_matrix.png
+│   ├── cardinal_baseline.csv
+│   ├── procure_risk_scores.csv
+│   └── cardinal_vs_procure.csv
 │
+├── .python-version                 # Pinned to 3.12
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -104,17 +163,28 @@ pro-cure/
 
 ## Results
 
-*To be updated as experiments complete.*
+*Updated as notebooks complete.*
 
-### Cardinal baseline vs Pro-Cure Risk Index — Tembisa validation
+### NLP Classifier — all departments (Notebook 02)
+
+| Model | CV F1 | Test Precision | Test Recall | Test F1 |
+|---|---|---|---|---|
+| Logistic Regression | — | — | — | — |
+| Linear SVM | — | — | — | — |
+| Random Forest | — | — | — | — |
+
+Ground truth: 418 suspicious (direct/limited/selective + SIU Tembisa suppliers) vs 37,405 clean
+
+### Cardinal baseline vs Pro-Cure Risk Index (Notebook 07)
 
 | System | Precision | Recall | F1 | Notes |
 |---|---|---|---|---|
 | Cardinal (10 generic indicators) | — | — | — | Global baseline |
-| Pro-Cure (SA-specific signals) | — | — | — | |
-| Pro-Cure + Cardinal (combined) | — | — | — | |
+| Pro-Cure NLP only | — | — | — | |
+| Pro-Cure all signals | — | — | — | |
+| Pro-Cure + Cardinal combined | — | — | — | |
 
-Ground truth: companies named in the [Tembisa SIU Report](https://www.siu.org.za/)
+Validation: Tembisa SIU report named companies + health sector deviation records
 
 ---
 
@@ -122,10 +192,11 @@ Ground truth: companies named in the [Tembisa SIU Report](https://www.siu.org.za
 
 *Streamlit dashboard link — added after Phase 5 deployment.*
 
-Three views:
-1. **National overview** — risk map by department and province
-2. **Supplier deep-dive** — full risk profile with Cardinal vs Pro-Cure score breakdown
+Four views:
+1. **National overview** — risk map by department and province, all sectors
+2. **Supplier deep-dive** — full risk profile, network connections, contract history
 3. **Red flag feed** — latest high-risk contracts ranked by Pro-Cure Risk Index
+4. **Tembisa reconstruction** — Cardinal vs Pro-Cure on 2021 Gauteng Health data
 
 ---
 
@@ -133,7 +204,7 @@ Three views:
 
 `reports/tembisa_reconstruction.md` answers: **if Pro-Cure had existed in January 2021, would it have flagged the Maumela, Mazibuko and Govindraju networks before Babita was killed in August?**
 
-The reconstruction runs both Cardinal and Pro-Cure on 2021 data. The difference in what they catch is the value of SA-specific signal engineering.
+The reconstruction runs Cardinal first, then Pro-Cure. The difference in what they catch is the value of SA-specific, NLP-augmented signal engineering over generic indicators.
 
 ---
 
@@ -151,10 +222,10 @@ Built in alignment with the [Data Science for Social Impact (DSFSI)](https://dsf
 
 ```bibtex
 @software{procure_2026,
-  author  = {Kamogelo Jabulile Motlhale},
-  title   = {Pro-Cure: AI-Powered Procurement Anomaly Detection for South African Public Health},
+  author  = {[Your Name]},
+  title   = {Pro-Cure: AI-Powered Procurement Anomaly Detection for South African Public Institutions},
   year    = {2026},
-  url     = {https://github.com/jabbzthecoder/pro-cure}
+  url     = {https://github.com/JabbzTheCoder/pro-cure}
 }
 ```
 
